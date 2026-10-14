@@ -302,11 +302,12 @@ function hasRegisteredUser() {
 }
 
 function setupNavigationState() {
-  const pathname = window.location.pathname.split('/').pop() || 'index.html';
-  const pageName = pathname === 'index.html' ? 'index' : pathname.replace('.html', '');
-  document.querySelectorAll('.nav-links a').forEach((link) => {
-    const target = link.dataset.page;
-    link.classList.toggle('active', target === pageName || (pageName === 'index' && target === 'index'));
+  const pathname = window.location.pathname.split('/').pop() || 'home.html';
+  const pageName = pathname === 'home.html' || pathname === '' || pathname === '/' ? 'home' : pathname.replace('.html', '');
+  document.querySelectorAll('.nav-links a, .side-item').forEach((link) => {
+    const target = link.dataset.page || link.dataset.side;
+    if (!target) return;
+    link.classList.toggle('active', target === pageName);
   });
 }
 
@@ -460,17 +461,81 @@ async function handleInitialRegistration(event) {
     const { user } = await api('/api/user', { method: 'POST', body: { email, password, ageRange } });
     setSessionId(user.userId);
     await loadUserState();
-
-    const welcomeModal = document.getElementById('welcome-modal');
-    if (welcomeModal) {
-      welcomeModal.style.display = 'none';
-      document.getElementById('initial-registration-form')?.reset();
-    }
-    updateAccountUI();
-    showWelcomeNotification();
+    window.location.href = 'home.html';
   } catch (err) {
     showToast(err.message || 'Registration failed', 'error');
   }
+}
+
+async function handleSignIn(event) {
+  event.preventDefault();
+  const email = document.getElementById('signin-email').value.trim();
+  const password = document.getElementById('signin-password').value;
+  const errorEl = document.getElementById('signin-error');
+  if (errorEl) { errorEl.textContent = ''; errorEl.style.display = 'none'; }
+
+  if (!email || !password) {
+    if (errorEl) { errorEl.textContent = 'Email and password are required.'; errorEl.style.display = 'block'; }
+    return;
+  }
+
+  // Admin may log in with just "admin" — the server resolves it.
+  const normalised = email.toLowerCase() === 'admin' ? 'admin@socialcircle.al' : email;
+
+  try {
+    const { user } = await api('/api/user', {
+      method: 'POST',
+      body: { email: normalised, password, action: 'login' },
+    });
+    setSessionId(user.userId);
+    await loadUserState();
+    window.location.href = user.email === 'admin@socialcircle.al' ? 'admin.html' : 'home.html';
+  } catch (err) {
+    if (errorEl) {
+      errorEl.textContent = err.message || 'Invalid email or password';
+      errorEl.style.display = 'block';
+    }
+  }
+}
+
+function setupAuthTabs() {
+  const tabs = document.querySelectorAll('.auth-tab');
+  if (!tabs.length) return;
+  const panels = {
+    signin: document.getElementById('auth-signin-form'),
+    signup: document.getElementById('auth-signup-form'),
+  };
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      tabs.forEach((t) => {
+        t.classList.toggle('active', t === tab);
+        t.setAttribute('aria-selected', t === tab ? 'true' : 'false');
+      });
+      Object.entries(panels).forEach(([key, panel]) => {
+        if (!panel) return;
+        panel.classList.toggle('hidden', key !== tab.dataset.authTab);
+      });
+    });
+  });
+}
+
+/* Gate: on the auth page, bounce logged-in users to home. On any gated
+   page, bounce guests to the auth page. Admin page handles its own auth. */
+function gatePage() {
+  const path = window.location.pathname.split('/').pop() || 'index.html';
+  const isAuthPage = path === 'index.html' || path === '' || path === '/';
+  const isAdminPage = path === 'admin.html';
+  const signedIn = Boolean(getSessionId() && currentUser.userId);
+
+  if (isAuthPage && signedIn) {
+    window.location.replace('home.html');
+    return true;
+  }
+  if (!isAuthPage && !isAdminPage && !signedIn) {
+    window.location.replace('index.html');
+    return true;
+  }
+  return false;
 }
 
 function updateAccountUI() {
@@ -513,8 +578,8 @@ async function handleLogout() {
   currentUser.bookingPlace = 'None';
   currentUser.bookingDate = 'N/A';
   currentUser.bookingTime = 'N/A';
-  showToast('👋 Logged out', 'success');
-  setTimeout(() => (window.location.href = 'index.html'), 1200);
+  showToast('Logged out', 'success');
+  setTimeout(() => (window.location.href = 'index.html'), 900);
 }
 
 function renderBookingHistory() {
@@ -891,17 +956,70 @@ async function renderAdminTables() {
   }
 }
 
+function renderTonightPane() {
+  const pane = document.querySelector('.main-pane');
+  if (!pane) return;
+  const bookings = currentUser.bookings || [];
+  const favorites = currentUser.favorites || [];
+  const meetups = document.getElementById('stat-meetups');
+  const seats = document.getElementById('stat-seats');
+  const connections = document.getElementById('stat-connections');
+  if (meetups) meetups.textContent = String(bookings.length);
+  if (seats) seats.textContent = String(Math.max(0, bookings.length * 2));
+  if (connections) connections.textContent = String(favorites.length);
+
+  const avatar = document.getElementById('side-avatar');
+  if (avatar) {
+    const initial = (currentUser.email || 'A').trim().charAt(0).toUpperCase();
+    avatar.textContent = initial || 'A';
+  }
+
+  // Hook up segmented posts toggle
+  const segs = document.querySelectorAll('.posts-head .seg');
+  segs.forEach((s) => s.addEventListener('click', () => {
+    segs.forEach((x) => {
+      x.classList.toggle('active', x === s);
+      x.setAttribute('aria-selected', x === s ? 'true' : 'false');
+    });
+  }));
+
+  // "New post" and "Your story" placeholders — surface a friendly toast
+  document.getElementById('new-post-btn')?.addEventListener('click', () => {
+    showToast('Posts arrive in a future update ✨', 'info');
+  });
+  document.querySelector('.story-tile')?.addEventListener('click', () => {
+    showToast('Stories arrive in a future update ✨', 'info');
+  });
+
+  document.getElementById('side-create')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = 'booking.html';
+  });
+  document.getElementById('side-favourites')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    showToast(
+      favorites.length ? `${favorites.length} favourite${favorites.length === 1 ? '' : 's'} saved` : 'No favourites yet — tap ☆ on a venue',
+      'info',
+    );
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   initDarkMode();
   setupMobileMenu();
   await loadUserState();
 
+  // Auth / page gate — may redirect and halt further init.
+  if (gatePage()) return;
+
+  setupAuthTabs();
   setupNavigationState();
   renderFeaturedHome();
   renderBookingList();
   loadDetailPageFromQuery();
   updateAccountUI();
   updateFavoriteButtons();
+  renderTonightPane();
 
   // Fire-and-forget: record the visit if logged in.
   if (getSessionId()) {
@@ -964,4 +1082,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('logout-btn')?.addEventListener('click', handleLogout);
   document.getElementById('admin-login-form')?.addEventListener('submit', handleAdminLogin);
   document.getElementById('payment-method')?.addEventListener('change', (e) => togglePaymentDetails(e.target.value));
+  document.getElementById('auth-signin-form')?.addEventListener('submit', handleSignIn);
+  document.getElementById('auth-signup-form')?.addEventListener('submit', handleInitialRegistration);
 });
