@@ -304,7 +304,7 @@ function hasRegisteredUser() {
 function setupNavigationState() {
   const pathname = window.location.pathname.split('/').pop() || 'home.html';
   const pageName = pathname === 'home.html' || pathname === '' || pathname === '/' ? 'home' : pathname.replace('.html', '');
-  document.querySelectorAll('.nav-links a, .side-item').forEach((link) => {
+  document.querySelectorAll('.nav-links a, .side-item, .pill-nav-link').forEach((link) => {
     const target = link.dataset.page || link.dataset.side;
     if (!target) return;
     link.classList.toggle('active', target === pageName);

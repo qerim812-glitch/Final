@@ -1,32 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Social Circle - Place Details</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-  <nav>
-    <a href="home.html" class="logo" style="text-decoration: none; color: inherit;">The Social Circle</a>
-    <div style="display:flex;align-items:center;gap:1rem;">
-      <button id="theme-toggle" type="button" style="background:none;border:none;font-size:1.5rem;cursor:pointer;padding:0.5rem;" title="Toggle dark mode">🌙</button>
-      <button id="hamburger-menu" class="hamburger" type="button" aria-label="Menu">
-        <span></span>
-        <span></span>
-        <span></span>
+<body class="app-body dark-mode">
+  <!-- TOP NAVBAR (pill style) -->
+    <nav class="pill-nav" role="navigation" aria-label="Main navigation">
+      <button
+        id="theme-toggle"
+        type="button"
+        class="pill-nav-moon"
+        title="Toggle dark mode"
+        aria-label="Toggle dark mode"
+      >
+        🌙
       </button>
-      <div class="nav-links">
-        <a class="nav-link" data-page="home" href="home.html">Home</a>
-        <a class="nav-link" data-page="booking" href="booking.html">Bookings</a>
-        <a class="nav-link" data-page="chat" href="chat.html">Community Chat</a>
-        <a class="nav-link" data-page="dm" href="dm.html">Private DMs</a>
-        <a class="nav-link" data-page="account" href="account.html">My Account</a>
-        <a class="nav-link" data-page="donations" href="donations.html">Donations</a>
-        <a class="nav-link" data-page="report" href="report.html">Report a User</a>
+      <div class="pill-nav-links">
+        <a class="pill-nav-link" data-page="home" href="home.html">Home</a>
+        <a class="pill-nav-link active" data-page="booking" href="booking.html">Bookings</a>
+        <a class="pill-nav-link" data-page="chat" href="chat.html">Community Chat</a>
+        <a class="pill-nav-link" data-page="dm" href="dm.html">Private DMs</a>
+        <a class="pill-nav-link" data-page="account" href="account.html">My Account</a>
+        <a class="pill-nav-link" data-page="donations" href="donations.html">Donations</a>
+        <a class="pill-nav-link" data-page="report" href="report.html">Report a User</a>
       </div>
-    </div>
-  </nav>
+    </nav>
 
   <main>
     <a href="booking.html" style="background: none; border: none; color: var(--primary); cursor: pointer; margin-bottom: 1rem; font-weight: 600; display: inline-block; text-decoration: none;">← Back to Places List</a>
