@@ -159,16 +159,26 @@ function showToast(message, type = 'info') {
   setTimeout(() => toast.remove(), 3000);
 }
 
-/* Dark mode */
+/* Dark mode — default to dark since the design is dark-first */
+function applyTheme(theme) {
+  const isDark = theme === 'dark';
+  document.body.classList.toggle('dark-mode', isDark);
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  // Keep the moon/sun glyph in sync with current state
+  document.querySelectorAll('.pill-nav-moon, #theme-toggle').forEach((btn) => {
+    if (btn && btn.id === 'theme-toggle') btn.textContent = isDark ? '🌙' : '☀️';
+  });
+}
 function initDarkMode() {
-  const saved = localStorage.getItem(THEME_KEY) || 'light';
-  if (saved === 'dark') document.body.classList.add('dark-mode');
+  const saved = localStorage.getItem(THEME_KEY) || 'dark';
+  applyTheme(saved);
 }
 function toggleDarkMode() {
-  document.body.classList.toggle('dark-mode');
-  const isDark = document.body.classList.contains('dark-mode');
-  localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
-  showToast(isDark ? 'Dark mode on' : 'Light mode on');
+  const nextIsDark = !document.body.classList.contains('dark-mode');
+  const next = nextIsDark ? 'dark' : 'light';
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+  showToast(nextIsDark ? 'Dark mode on' : 'Light mode on');
 }
 
 /* Favorites — server-backed */

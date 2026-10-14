@@ -1349,8 +1349,28 @@ body.dark-mode .bank-box {
 html[data-theme="dark"] {
   color-scheme: dark;
 }
+html[data-theme="light"] {
+  color-scheme: light;
+}
 
+/* Base: layout + typography only. Colors live on the mode-specific
+   selectors below so toggling .dark-mode actually swaps themes. */
 .app-body {
+  font-family:
+    "Inter",
+    "SF Pro Text",
+    "Segoe UI",
+    Roboto,
+    system-ui,
+    -apple-system,
+    sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Dark mode (default on first load — HTML ships with .dark-mode set) */
+.app-body.dark-mode {
   --app-bg: #0a0f1c;
   --app-surface: #121829;
   --app-surface-strong: #171f33;
@@ -1362,19 +1382,104 @@ html[data-theme="dark"] {
   --app-accent-ink: #0a0f1c;
   --app-chip-active-bg: #e9f368;
   --app-chip-active-ink: #1a1d12;
-
   background: var(--app-bg);
   color: var(--app-text);
-  font-family:
-    "Inter",
-    "SF Pro Text",
-    "Segoe UI",
-    Roboto,
-    system-ui,
-    -apple-system,
-    sans-serif;
-  min-height: 100vh;
-  margin: 0;
+}
+
+/* Light mode — same token names, different values. Pill nav + auth card
+   + stat chips pick these up automatically. */
+.app-body:not(.dark-mode) {
+  --app-bg: #f6f7fb;
+  --app-surface: #ffffff;
+  --app-surface-strong: #eef1f8;
+  --app-border: #e2e5ee;
+  --app-border-strong: #d4d9e5;
+  --app-text: #0f172a;
+  --app-text-muted: #5c6577;
+  --app-accent: #7c3aed;
+  --app-accent-ink: #ffffff;
+  --app-chip-active-bg: linear-gradient(135deg, #a78bfa, #8b5cf6);
+  --app-chip-active-ink: #ffffff;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(167, 139, 250, 0.14), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(236, 72, 153, 0.08), transparent 60%),
+    linear-gradient(180deg, #f9faff 0%, #f4f3ff 32%, #fffaf5 100%);
+  background-attachment: fixed;
+  color: var(--app-text);
+}
+
+/* Light mode: tweak sub-components that otherwise look washed-out. */
+.app-body:not(.dark-mode) .pill-nav {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--app-border);
+}
+.app-body:not(.dark-mode) .pill-nav-link {
+  background: rgba(124, 58, 237, 0.08);
+  color: #1f2937;
+}
+.app-body:not(.dark-mode) .pill-nav-link:hover {
+  background: rgba(124, 58, 237, 0.16);
+}
+.app-body:not(.dark-mode) .pill-nav-admin {
+  background: rgba(234, 179, 8, 0.12);
+  color: #a16207;
+}
+.app-body:not(.dark-mode) .pill-nav-admin.active,
+.app-body:not(.dark-mode) .pill-nav-admin:hover {
+  background: linear-gradient(135deg, #facc15, #eab308);
+  color: #0a0f1c;
+}
+.app-body:not(.dark-mode) .stat-chip {
+  background: #ffffff;
+  border-color: var(--app-border);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+.app-body:not(.dark-mode) .stat-chip.active {
+  background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+  color: #ffffff;
+}
+.app-body:not(.dark-mode) .empty-card {
+  background: #ffffff;
+  border-color: var(--app-border);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+}
+.app-body:not(.dark-mode) .segmented {
+  background: #eef1f8;
+}
+.app-body:not(.dark-mode) .seg.active {
+  background: #0f172a;
+  color: #ffffff;
+}
+.app-body:not(.dark-mode) .pill-btn {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: var(--app-border-strong);
+}
+.app-body:not(.dark-mode) .pill-btn:hover {
+  background: #eef1f8;
+}
+
+/* Auth card uses the same tokens — a light-mode variant for the login
+   page falls out of changing --app-surface and --app-text. */
+.app-body:not(.dark-mode) .auth-card {
+  background: #ffffff;
+  border-color: var(--app-border);
+  box-shadow: 0 30px 70px rgba(99, 102, 241, 0.14);
+}
+.app-body:not(.dark-mode) .auth-body .form-group input,
+.app-body:not(.dark-mode) .auth-body .form-group select {
+  background: #ffffff;
+  color: var(--app-text);
+  border-color: var(--app-border-strong);
+}
+.app-body:not(.dark-mode) .auth-body .btn-primary {
+  background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+  color: #ffffff;
+}
+.app-body:not(.dark-mode) .auth-hint code {
+  background: #eef1f8;
+  color: #0f172a;
 }
 
 .app-body * {
@@ -2803,5 +2908,226 @@ html[data-theme="dark"] {
   }
   .app-body h2 {
     font-size: 1.3rem;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════
+   Modern app polish — final layer.
+   Variable font tuning, elevation system, motion, focus.
+   ═════════════════════════════════════════════════════════ */
+
+.app-body,
+.app-body input,
+.app-body button,
+.app-body select,
+.app-body textarea {
+  font-family:
+    "Inter",
+    "SF Pro Text",
+    "Segoe UI",
+    Roboto,
+    system-ui,
+    -apple-system,
+    sans-serif;
+  font-feature-settings: "cv11", "ss01", "ss03";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.app-body {
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --elev-1: 0 1px 2px rgba(2, 6, 23, 0.06), 0 1px 3px rgba(2, 6, 23, 0.08);
+  --elev-2: 0 4px 10px rgba(2, 6, 23, 0.08), 0 10px 24px rgba(2, 6, 23, 0.08);
+  --elev-3: 0 12px 32px rgba(2, 6, 23, 0.1), 0 24px 60px rgba(2, 6, 23, 0.12);
+  --ring-primary: 0 0 0 3px rgba(167, 139, 250, 0.28);
+}
+
+/* Nicer selection highlight on both modes */
+.app-body ::selection {
+  background: rgba(167, 139, 250, 0.28);
+  color: inherit;
+}
+
+/* Make every clickable thing feel tappable + consistent */
+.app-body button,
+.app-body a.btn-primary,
+.app-body .pill-btn,
+.app-body .pill-nav-link {
+  user-select: none;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.app-body button:focus-visible,
+.app-body a:focus-visible,
+.app-body input:focus-visible,
+.app-body select:focus-visible,
+.app-body textarea:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-primary);
+  border-radius: 10px;
+}
+
+/* Card: soft gradient surface for a touch of depth. Dark + light. */
+.app-body.dark-mode .card {
+  background: linear-gradient(180deg, #182036 0%, #121a2d 100%);
+  border: 1px solid var(--app-border);
+  box-shadow: var(--elev-2);
+}
+.app-body:not(.dark-mode) .card {
+  background: #ffffff;
+  border: 1px solid var(--app-border);
+  box-shadow: var(--elev-1);
+}
+.app-body .card:hover {
+  box-shadow: var(--elev-3);
+}
+
+/* Primary button: refined gradient, scale on press. */
+.app-body .btn-primary {
+  background: linear-gradient(135deg, #a78bfa, #7c3aed);
+  color: #ffffff;
+  border: none;
+  padding: 0.78rem 1.4rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.005em;
+  box-shadow: 0 1px 2px rgba(124, 58, 237, 0.4), 0 10px 24px rgba(124, 58, 237, 0.28);
+  position: relative;
+  overflow: hidden;
+}
+.app-body .btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 1px 2px rgba(124, 58, 237, 0.4), 0 16px 32px rgba(124, 58, 237, 0.4);
+}
+.app-body .btn-primary:active {
+  transform: translateY(0);
+  filter: brightness(0.95);
+}
+
+/* Fade + slight rise on main-pane entry */
+.app-body .main-pane,
+.app-body main {
+  animation: appFadeIn 0.35s ease-out both;
+}
+@keyframes appFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Pill nav: subtle translucency + bottom hairline */
+.app-body.dark-mode .pill-nav {
+  background: rgba(10, 15, 28, 0.72);
+  backdrop-filter: saturate(1.1) blur(14px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Make the brand dot sit on an outlined halo */
+.app-body .brand-dot {
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #facc15, #f59e0b);
+  box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.14);
+}
+
+.app-body .pill-nav-brand {
+  font-size: 1.02rem;
+  letter-spacing: -0.015em;
+}
+
+/* Headings — tighter tracking */
+.app-body h1 {
+  letter-spacing: -0.025em;
+  font-weight: 800;
+}
+.app-body h2 {
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+/* Tables: a touch lighter dividers so dense content breathes */
+.app-body.dark-mode .spreadsheet td {
+  border-bottom-color: rgba(255, 255, 255, 0.045);
+}
+.app-body.dark-mode .spreadsheet tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+/* Chat bubbles: softer radius with tail off */
+.app-body .chat-msg {
+  border-radius: 18px;
+}
+.app-body .chat-msg.self {
+  border-bottom-right-radius: 6px;
+}
+.app-body .chat-msg.other {
+  border-bottom-left-radius: 6px;
+}
+
+/* Donations / report / booking form: use the elevated card */
+.app-body.dark-mode .booking-form,
+.app-body.dark-mode .account-card,
+.app-body.dark-mode .admin-login-box,
+.app-body.dark-mode .detail-header {
+  background: linear-gradient(180deg, #182036 0%, #121a2d 100%);
+  border: 1px solid var(--app-border);
+  box-shadow: var(--elev-2);
+}
+
+/* Light-mode mirror */
+.app-body:not(.dark-mode) .booking-form,
+.app-body:not(.dark-mode) .account-card,
+.app-body:not(.dark-mode) .admin-login-box,
+.app-body:not(.dark-mode) .detail-header {
+  background: #ffffff;
+  border: 1px solid var(--app-border);
+  box-shadow: var(--elev-1);
+}
+
+/* Softer, more professional toast */
+.app-body .toast {
+  border-radius: 14px;
+  padding: 0.9rem 1.1rem;
+  box-shadow: var(--elev-3);
+  animation: toastIn 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Mobile — bigger tap targets + consistent gutters */
+@media (max-width: 640px) {
+  .app-body .btn-primary,
+  .app-body .pill-btn {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.95rem;
+  }
+  .app-body .form-group input,
+  .app-body .form-group select,
+  .app-body .form-group textarea {
+    padding: 0.8rem 0.9rem;
+    font-size: 1rem; /* avoids iOS auto-zoom on focus */
+  }
+  .app-body h1 {
+    font-size: 1.5rem;
+  }
+  .app-body .pane-title {
+    font-size: 1.4rem;
+  }
+}
+
+/* iOS safe areas for sticky navbar */
+@supports (padding: env(safe-area-inset-top)) {
+  .app-body .pill-nav {
+    padding-top: calc(env(safe-area-inset-top) + 0.75rem);
   }
 }
