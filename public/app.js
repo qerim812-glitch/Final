@@ -301,8 +301,9 @@ function hasRegisteredUser() {
   return Boolean(getSessionId() && currentUser.email);
 }
 
+const ADMIN_EMAILS = new Set(['admin@socialcircle.al', 'mexhidara1@gmail.com']);
 function isAdminUser() {
-  return currentUser.email === 'admin@socialcircle.al';
+  return ADMIN_EMAILS.has((currentUser.email || '').toLowerCase());
 }
 
 function setupNavigationState() {
@@ -498,7 +499,9 @@ async function handleSignIn(event) {
     });
     setSessionId(user.userId);
     await loadUserState();
-    window.location.href = user.email === 'admin@socialcircle.al' ? 'admin.html' : 'home.html';
+    window.location.href = ADMIN_EMAILS.has((user.email || '').toLowerCase())
+      ? 'admin.html'
+      : 'home.html';
   } catch (err) {
     if (errorEl) {
       errorEl.textContent = err.message || 'Invalid email or password';

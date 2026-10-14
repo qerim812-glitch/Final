@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { db } from "../../lib/db";
+import { db, isAdminEmail } from "../../lib/db";
 import { json, parseJson, preflight, sanitize, sessionUserId } from "../../lib/api-helpers";
 
 function isAdmin(request: Request): boolean {
   const userId = request.headers.get("x-user-id") ?? "";
   const user = db.getUser(userId);
-  return !!user && user.email === "admin@socialcircle.al";
+  return isAdminEmail(user?.email);
 }
 
 export const Route = createFileRoute("/api/donations")({

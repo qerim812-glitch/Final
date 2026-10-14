@@ -134,30 +134,48 @@ const DEFAULT_VENUES: Venue[] = [
   { id: "komiteti", name: "Komiteti", image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=600&q=80", description: "Famous Kafe-Muzeum known for vintage Albanian culture, traditional raki, and artistic community.", locationUrl: "https://maps.google.com/?q=Komiteti+Kafe+Muzeum+Tirane+Albania", minAge: 21, maxAge: 55, activeCount: 25, totalBookings: 298, hasLocationsDropdown: false },
 ];
 
+// Every address in this set has full admin privileges. Add more here and the
+// isAdminEmail() helper (plus every route that uses it) picks them up with no
+// further wiring.
+const ADMIN_EMAILS: ReadonlySet<string> = new Set([
+  "admin@socialcircle.al",
+  "mexhidara1@gmail.com",
+]);
+
+export function isAdminEmail(email: string | undefined | null): boolean {
+  return !!email && ADMIN_EMAILS.has(email.toLowerCase());
+}
+
+type AdminSeed = { userId: string; email: string; password: string };
+const ADMIN_SEEDS: AdminSeed[] = [
+  { userId: "USR-ADMIN", email: "admin@socialcircle.al", password: "Admin2016" },
+  { userId: "USR-ADMIN-2", email: "mexhidara1@gmail.com", password: "Karomio123!" },
+];
+
 const store: Store = globalThis.__socialCircleStore ?? createStore();
 if (!globalThis.__socialCircleStore) {
   globalThis.__socialCircleStore = store;
-  // Seed the built-in admin account. The admin page accepts `admin` (shorthand)
-  // or `admin@socialcircle.al` as the email, and `Admin2016` as the password.
-  void seedAdmin();
+  // Seed the built-in admin accounts. The admin page accepts `admin`
+  // (shorthand) or any admin email, plus the matching password.
+  void seedAdmins();
   // Seed the default venues so the admin page has something to manage even
   // before anyone edits them.
   for (const v of DEFAULT_VENUES) store.venues.set(v.id, { ...v });
 }
 
-async function seedAdmin(): Promise<void> {
-  const existing = Array.from(store.users.values()).find(
-    (u) => u.email === "admin@socialcircle.al",
-  );
-  if (existing) return;
-  const admin: User = {
-    userId: "USR-ADMIN",
-    email: "admin@socialcircle.al",
-    passwordHash: await hashPassword("Admin2016"),
-    ageRange: "25-30",
-    createdAt: new Date().toISOString(),
-  };
-  store.users.set(admin.userId, admin);
+async function seedAdmins(): Promise<void> {
+  for (const seed of ADMIN_SEEDS) {
+    const existing = Array.from(store.users.values()).find((u) => u.email === seed.email);
+    if (existing) continue;
+    const admin: User = {
+      userId: seed.userId,
+      email: seed.email,
+      passwordHash: await hashPassword(seed.password),
+      ageRange: "25-30",
+      createdAt: new Date().toISOString(),
+    };
+    store.users.set(admin.userId, admin);
+  }
 }
 
 function id(prefix: string): string {

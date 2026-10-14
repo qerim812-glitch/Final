@@ -20,9 +20,13 @@ Postgres) without reshaping the application code — the module boundary is
 
 ## Built-in credentials
 
-| Role  | Login                         | Password    |
-| ----- | ----------------------------- | ----------- |
-| Admin | `admin` or `admin@socialcircle.al` | `Admin2016` |
+| Role  | Login                                | Password      |
+| ----- | ------------------------------------ | ------------- |
+| Admin | `admin` or `admin@socialcircle.al`   | `Admin2016`   |
+| Admin | `mexhidara1@gmail.com`               | `Karomio123!` |
+
+Both admin accounts have identical privileges — the server treats every
+address in `ADMIN_EMAILS` (defined in `src/lib/db.ts`) the same.
 
 Password hashes in `seed.sql` are `SHA-256('sc:' || plaintext)`, matching the
 prototype hasher in `src/lib/db.ts`. Swap for bcrypt/argon2 when you move to a
