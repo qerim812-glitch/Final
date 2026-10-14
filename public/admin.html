@@ -8,7 +8,12 @@
 </head>
 <body class="app-body dark-mode">
   <!-- TOP NAVBAR (pill style) -->
+    <!-- TOP NAVBAR (pill style) -->
     <nav class="pill-nav" role="navigation" aria-label="Main navigation">
+      <a class="pill-nav-brand" href="home.html" aria-label="Social Circle home">
+        <span class="brand-dot" aria-hidden="true"></span>
+        <span class="pill-nav-brand-text">Social Circle</span>
+      </a>
       <button
         id="theme-toggle"
         type="button"
@@ -26,6 +31,7 @@
         <a class="pill-nav-link" data-page="account" href="account.html">My Account</a>
         <a class="pill-nav-link" data-page="donations" href="donations.html">Donations</a>
         <a class="pill-nav-link" data-page="report" href="report.html">Report a User</a>
+        <a class="pill-nav-link pill-nav-admin hidden active" data-page="admin" href="admin.html">Admin</a>
       </div>
     </nav>
 
@@ -68,45 +74,146 @@
     </div>
 
     <div id="admin-dashboard-view" style="display: none;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-        <h2>Admin Data Dashboard</h2>
-        <button class="btn-primary" style="background-color: var(--text-muted);" onclick="adminLogout()">Logout</button>
+      <div class="admin-topbar">
+        <h2>Admin dashboard</h2>
+        <button class="btn-primary pill-btn" onclick="adminLogout()">Logout</button>
       </div>
 
-      <h3>User Bookings Spreadsheet</h3>
-      <div class="spreadsheet-container">
-        <table class="spreadsheet">
-          <thead>
-            <tr>
-              <th>UserID</th>
-              <th>Email</th>
-              <th>Age</th>
-              <th>Place</th>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Created</th>
-            </tr>
-          </thead>
-          <tbody id="spreadsheet-body"></tbody>
-        </table>
+      <div class="admin-tabs" role="tablist" aria-label="Admin sections">
+        <button type="button" class="admin-tab active" data-admin-tab="bookings">Bookings</button>
+        <button type="button" class="admin-tab" data-admin-tab="messages">Messages</button>
+        <button type="button" class="admin-tab" data-admin-tab="reports">Reports</button>
+        <button type="button" class="admin-tab" data-admin-tab="venues">Booking places</button>
+        <button type="button" class="admin-tab" data-admin-tab="donations">Donations</button>
       </div>
 
-      <h3>User Reports Log Spreadsheet</h3>
-      <div class="spreadsheet-container">
-        <table class="spreadsheet">
-          <thead>
-            <tr>
-              <th>Report ID</th>
-              <th>Reporter Email</th>
-              <th>Reported User</th>
-              <th>Reason</th>
-              <th>Report Description</th>
-              <th>Timestamp</th>
-            </tr>
-          </thead>
-          <tbody id="reports-spreadsheet-body"></tbody>
-        </table>
-      </div>
+      <!-- BOOKINGS -->
+      <section class="admin-panel" data-panel="bookings">
+        <h3>User bookings</h3>
+        <div class="spreadsheet-container">
+          <table class="spreadsheet">
+            <thead>
+              <tr>
+                <th>UserID</th>
+                <th>Email</th>
+                <th>Age</th>
+                <th>Place</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="spreadsheet-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- MESSAGES -->
+      <section class="admin-panel hidden" data-panel="messages">
+        <h3>Community chat</h3>
+        <div class="spreadsheet-container">
+          <table class="spreadsheet">
+            <thead>
+              <tr><th>When</th><th>User</th><th>Message</th><th></th></tr>
+            </thead>
+            <tbody id="admin-chat-body"></tbody>
+          </table>
+        </div>
+
+        <h3 style="margin-top:2rem;">Direct messages</h3>
+        <div class="spreadsheet-container">
+          <table class="spreadsheet">
+            <thead>
+              <tr><th>When</th><th>From</th><th>To</th><th>Message</th><th></th></tr>
+            </thead>
+            <tbody id="admin-dm-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- REPORTS -->
+      <section class="admin-panel hidden" data-panel="reports">
+        <h3>Reports</h3>
+        <div class="spreadsheet-container">
+          <table class="spreadsheet">
+            <thead>
+              <tr>
+                <th>Report ID</th>
+                <th>Reporter</th>
+                <th>Reported user</th>
+                <th>Reason</th>
+                <th>Description</th>
+                <th>When</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="reports-spreadsheet-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- VENUES -->
+      <section class="admin-panel hidden" data-panel="venues">
+        <h3>Booking places</h3>
+        <form id="admin-venue-form" class="admin-form">
+          <input type="hidden" id="venue-id" />
+          <div class="form-row">
+            <div class="form-group"><label>Name</label><input type="text" id="venue-name" required /></div>
+            <div class="form-group"><label>Image URL</label><input type="url" id="venue-image" /></div>
+          </div>
+          <div class="form-group"><label>Description</label><textarea id="venue-description" rows="2"></textarea></div>
+          <div class="form-group"><label>Google Maps URL</label><input type="url" id="venue-location" /></div>
+          <div class="form-row">
+            <div class="form-group"><label>Min age</label><input type="number" id="venue-min" min="0" max="120" value="18" /></div>
+            <div class="form-group"><label>Max age</label><input type="number" id="venue-max" min="0" max="120" value="99" /></div>
+            <div class="form-group"><label>Active now</label><input type="number" id="venue-active" min="0" value="0" /></div>
+            <div class="form-group"><label>Total bookings</label><input type="number" id="venue-total" min="0" value="0" /></div>
+          </div>
+          <div class="form-group" style="display:flex;align-items:center;gap:0.5rem;">
+            <input type="checkbox" id="venue-dropdown" style="width:auto;" />
+            <label for="venue-dropdown" style="margin:0;">Has locations dropdown</label>
+          </div>
+          <div style="display:flex;gap:0.5rem;">
+            <button type="submit" class="btn-primary">Save venue</button>
+            <button type="button" class="pill-btn" id="venue-reset">New</button>
+          </div>
+        </form>
+
+        <div class="spreadsheet-container" style="margin-top:1.5rem;">
+          <table class="spreadsheet">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Ages</th>
+                <th>Active</th>
+                <th>Bookings</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="admin-venues-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- DONATIONS -->
+      <section class="admin-panel hidden" data-panel="donations">
+        <h3>Donations received</h3>
+        <div class="spreadsheet-container">
+          <table class="spreadsheet">
+            <thead>
+              <tr>
+                <th>When</th>
+                <th>User</th>
+                <th>Method</th>
+                <th>Amount</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="admin-donations-body"></tbody>
+          </table>
+        </div>
+      </section>
     </div>
   </main>
 

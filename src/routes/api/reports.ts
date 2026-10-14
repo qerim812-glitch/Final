@@ -3,6 +3,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { db } from "../../lib/db";
 import { json, parseJson, preflight, sanitize, sessionUserId } from "../../lib/api-helpers";
 
+function isAdmin(request: Request): boolean {
+  const userId = sessionUserId(request);
+  const user = userId ? db.getUser(userId) : undefined;
+  return !!user && user.email === "admin@socialcircle.al";
+}
+
 export const Route = createFileRoute("/api/reports")({
   server: {
     handlers: {
@@ -10,12 +16,18 @@ export const Route = createFileRoute("/api/reports")({
 
       // Admin-only read: the admin page requests this once it authenticates.
       GET: async ({ request }) => {
-        const userId = sessionUserId(request);
-        const user = userId ? db.getUser(userId) : undefined;
-        if (!user || user.email !== "admin@socialcircle.al") {
-          return json({ error: "Admin required" }, 403);
-        }
+        if (!isAdmin(request)) return json({ error: "Admin required" }, 403);
         return json({ reports: db.listReports() });
+      },
+
+      // Admin-only: delete a report by id in the query string.
+      DELETE: async ({ request }) => {
+        if (!isAdmin(request)) return json({ error: "Admin required" }, 403);
+        const url = new URL(request.url);
+        const reportId = sanitize(url.searchParams.get("id"), 64);
+        if (!reportId) return json({ error: "Missing id" }, 400);
+        const removed = db.deleteReport(reportId);
+        return removed ? json({ ok: true, reports: db.listReports() }) : json({ error: "Not found" }, 404);
       },
 
       POST: async ({ request }) => {

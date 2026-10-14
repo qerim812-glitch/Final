@@ -15,11 +15,14 @@ import { Route as ApiAdminRouteImport } from './routes/api/admin'
 import { Route as ApiBookingsRouteImport } from './routes/api/bookings'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiDmsRouteImport } from './routes/api/dms'
+import { Route as ApiDonationsRouteImport } from './routes/api/donations'
 import { Route as ApiFavoritesRouteImport } from './routes/api/favorites'
 import { Route as ApiProfileRouteImport } from './routes/api/profile'
 import { Route as ApiReportsRouteImport } from './routes/api/reports'
 import { Route as ApiReviewsRouteImport } from './routes/api/reviews'
 import { Route as ApiUserRouteImport } from './routes/api/user'
+import { Route as ApiAdminMessagesRouteImport } from './routes/api/admin/messages'
+import { Route as ApiAdminVenuesRouteImport } from './routes/api/admin/venues'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -51,6 +54,11 @@ const ApiDmsRoute = ApiDmsRouteImport.update({
   path: '/api/dms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDonationsRoute = ApiDonationsRouteImport.update({
+  id: '/api/donations',
+  path: '/api/donations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiFavoritesRoute = ApiFavoritesRouteImport.update({
   id: '/api/favorites',
   path: '/api/favorites',
@@ -76,46 +84,65 @@ const ApiUserRoute = ApiUserRouteImport.update({
   path: '/api/user',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminMessagesRoute = ApiAdminMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => ApiAdminRoute,
+} as any)
+const ApiAdminVenuesRoute = ApiAdminVenuesRouteImport.update({
+  id: '/venues',
+  path: '/venues',
+  getParentRoute: () => ApiAdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/activity': typeof ApiActivityRoute
-  '/api/admin': typeof ApiAdminRoute
+  '/api/admin': typeof ApiAdminRouteWithChildren
   '/api/bookings': typeof ApiBookingsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/dms': typeof ApiDmsRoute
+  '/api/donations': typeof ApiDonationsRoute
   '/api/favorites': typeof ApiFavoritesRoute
   '/api/profile': typeof ApiProfileRoute
   '/api/reports': typeof ApiReportsRoute
   '/api/reviews': typeof ApiReviewsRoute
   '/api/user': typeof ApiUserRoute
+  '/api/admin/messages': typeof ApiAdminMessagesRoute
+  '/api/admin/venues': typeof ApiAdminVenuesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/activity': typeof ApiActivityRoute
-  '/api/admin': typeof ApiAdminRoute
+  '/api/admin': typeof ApiAdminRouteWithChildren
   '/api/bookings': typeof ApiBookingsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/dms': typeof ApiDmsRoute
+  '/api/donations': typeof ApiDonationsRoute
   '/api/favorites': typeof ApiFavoritesRoute
   '/api/profile': typeof ApiProfileRoute
   '/api/reports': typeof ApiReportsRoute
   '/api/reviews': typeof ApiReviewsRoute
   '/api/user': typeof ApiUserRoute
+  '/api/admin/messages': typeof ApiAdminMessagesRoute
+  '/api/admin/venues': typeof ApiAdminVenuesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/activity': typeof ApiActivityRoute
-  '/api/admin': typeof ApiAdminRoute
+  '/api/admin': typeof ApiAdminRouteWithChildren
   '/api/bookings': typeof ApiBookingsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/dms': typeof ApiDmsRoute
+  '/api/donations': typeof ApiDonationsRoute
   '/api/favorites': typeof ApiFavoritesRoute
   '/api/profile': typeof ApiProfileRoute
   '/api/reports': typeof ApiReportsRoute
   '/api/reviews': typeof ApiReviewsRoute
   '/api/user': typeof ApiUserRoute
+  '/api/admin/messages': typeof ApiAdminMessagesRoute
+  '/api/admin/venues': typeof ApiAdminVenuesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -126,11 +153,14 @@ export interface FileRouteTypes {
     | '/api/bookings'
     | '/api/chat'
     | '/api/dms'
+    | '/api/donations'
     | '/api/favorites'
     | '/api/profile'
     | '/api/reports'
     | '/api/reviews'
     | '/api/user'
+    | '/api/admin/messages'
+    | '/api/admin/venues'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -139,11 +169,14 @@ export interface FileRouteTypes {
     | '/api/bookings'
     | '/api/chat'
     | '/api/dms'
+    | '/api/donations'
     | '/api/favorites'
     | '/api/profile'
     | '/api/reports'
     | '/api/reviews'
     | '/api/user'
+    | '/api/admin/messages'
+    | '/api/admin/venues'
   id:
     | '__root__'
     | '/'
@@ -152,20 +185,24 @@ export interface FileRouteTypes {
     | '/api/bookings'
     | '/api/chat'
     | '/api/dms'
+    | '/api/donations'
     | '/api/favorites'
     | '/api/profile'
     | '/api/reports'
     | '/api/reviews'
     | '/api/user'
+    | '/api/admin/messages'
+    | '/api/admin/venues'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiActivityRoute: typeof ApiActivityRoute
-  ApiAdminRoute: typeof ApiAdminRoute
+  ApiAdminRoute: typeof ApiAdminRouteWithChildren
   ApiBookingsRoute: typeof ApiBookingsRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiDmsRoute: typeof ApiDmsRoute
+  ApiDonationsRoute: typeof ApiDonationsRoute
   ApiFavoritesRoute: typeof ApiFavoritesRoute
   ApiProfileRoute: typeof ApiProfileRoute
   ApiReportsRoute: typeof ApiReportsRoute
@@ -217,6 +254,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDmsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/donations': {
+      id: '/api/donations'
+      path: '/api/donations'
+      fullPath: '/api/donations'
+      preLoaderRoute: typeof ApiDonationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/favorites': {
       id: '/api/favorites'
       path: '/api/favorites'
@@ -252,16 +296,45 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUserRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/messages': {
+      id: '/api/admin/messages'
+      path: '/messages'
+      fullPath: '/api/admin/messages'
+      preLoaderRoute: typeof ApiAdminMessagesRouteImport
+      parentRoute: typeof ApiAdminRoute
+    }
+    '/api/admin/venues': {
+      id: '/api/admin/venues'
+      path: '/venues'
+      fullPath: '/api/admin/venues'
+      preLoaderRoute: typeof ApiAdminVenuesRouteImport
+      parentRoute: typeof ApiAdminRoute
+    }
   }
 }
+
+interface ApiAdminRouteChildren {
+  ApiAdminMessagesRoute: typeof ApiAdminMessagesRoute
+  ApiAdminVenuesRoute: typeof ApiAdminVenuesRoute
+}
+
+const ApiAdminRouteChildren: ApiAdminRouteChildren = {
+  ApiAdminMessagesRoute: ApiAdminMessagesRoute,
+  ApiAdminVenuesRoute: ApiAdminVenuesRoute,
+}
+
+const ApiAdminRouteWithChildren = ApiAdminRoute._addFileChildren(
+  ApiAdminRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiActivityRoute: ApiActivityRoute,
-  ApiAdminRoute: ApiAdminRoute,
+  ApiAdminRoute: ApiAdminRouteWithChildren,
   ApiBookingsRoute: ApiBookingsRoute,
   ApiChatRoute: ApiChatRoute,
   ApiDmsRoute: ApiDmsRoute,
+  ApiDonationsRoute: ApiDonationsRoute,
   ApiFavoritesRoute: ApiFavoritesRoute,
   ApiProfileRoute: ApiProfileRoute,
   ApiReportsRoute: ApiReportsRoute,

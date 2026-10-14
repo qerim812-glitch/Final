@@ -66,6 +66,28 @@ export type Activity = {
   createdAt: string;
 };
 
+export type Venue = {
+  id: string;
+  name: string;
+  image: string;
+  description: string;
+  locationUrl: string;
+  minAge: number;
+  maxAge: number;
+  activeCount: number;
+  totalBookings: number;
+  hasLocationsDropdown: boolean;
+};
+
+export type Donation = {
+  id: string;
+  userId: string;
+  email: string;
+  amount: number;
+  method: string;
+  createdAt: string;
+};
+
 type Store = {
   users: Map<string, User>;
   bookings: Map<string, Booking>;
@@ -75,6 +97,8 @@ type Store = {
   dms: DirectMessage[];
   reports: Map<string, Report>;
   activity: Activity[];
+  venues: Map<string, Venue>;
+  donations: Map<string, Donation>;
   nextUserSeq: number;
 };
 
@@ -94,9 +118,21 @@ function createStore(): Store {
     dms: [],
     reports: new Map(),
     activity: [],
+    venues: new Map(),
+    donations: new Map(),
     nextUserSeq: 1003,
   };
 }
+
+const DEFAULT_VENUES: Venue[] = [
+  { id: "mulliri", name: "Mulliri", image: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=600&q=80", description: "Popular coffee hub in Tirana, perfect for remote working, fresh pastries, and social meetups.", locationUrl: "https://maps.google.com/?q=Mulliri+Tirane+Albania", minAge: 16, maxAge: 60, activeCount: 22, totalBookings: 310, hasLocationsDropdown: true },
+  { id: "moncherie", name: "Moncherie", image: "https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=600&q=80", description: "Cozy, vibrant espresso bar franchise loved by students and young professionals across Tirana.", locationUrl: "https://maps.google.com/?q=MonCherie+Tirane+Albania", minAge: 18, maxAge: 35, activeCount: 18, totalBookings: 245, hasLocationsDropdown: true },
+  { id: "sophie", name: "Sophie", image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=600&q=80", description: "Charming lounge bar and caffe offer sweet treats and vibrant social atmospheres.", locationUrl: "https://maps.google.com/?q=Sophie+Caffe+Tirane+Albania", minAge: 18, maxAge: 45, activeCount: 15, totalBookings: 189, hasLocationsDropdown: true },
+  { id: "le-cheateau", name: "Le Chateau", image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=600&q=80", description: "Elegant lounge environment featuring fine drinks, signature cocktails, and relaxed vibes.", locationUrl: "https://maps.google.com/?q=Le+Chateau+Tirane+Albania", minAge: 21, maxAge: 65, activeCount: 27, totalBookings: 412, hasLocationsDropdown: false },
+  { id: "millenium-garden", name: "Millenium Garden", image: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2f/3f/36/d5/caption.jpg?w=900&h=-1&s=1", description: "Spacious outdoor terrace garden bar along Pedonalja, ideal for large gatherings.", locationUrl: "https://maps.google.com/?q=Millennium+Garden+Tirane+Albania", minAge: 18, maxAge: 70, activeCount: 34, totalBookings: 520, hasLocationsDropdown: false },
+  { id: "my-way", name: "My Way - Liqeni Artificial Tirane", image: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=600&q=80", description: "Scenic bar right by Tirana Artificial Lake, offering panoramic water views and great cocktails.", locationUrl: "https://maps.google.com/?q=My+Way+Liqeni+Artificial+Tirane+Albania", minAge: 20, maxAge: 50, activeCount: 31, totalBookings: 380, hasLocationsDropdown: false },
+  { id: "komiteti", name: "Komiteti", image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=600&q=80", description: "Famous Kafe-Muzeum known for vintage Albanian culture, traditional raki, and artistic community.", locationUrl: "https://maps.google.com/?q=Komiteti+Kafe+Muzeum+Tirane+Albania", minAge: 21, maxAge: 55, activeCount: 25, totalBookings: 298, hasLocationsDropdown: false },
+];
 
 const store: Store = globalThis.__socialCircleStore ?? createStore();
 if (!globalThis.__socialCircleStore) {
@@ -104,6 +140,9 @@ if (!globalThis.__socialCircleStore) {
   // Seed the built-in admin account. The admin page accepts `admin` (shorthand)
   // or `admin@socialcircle.al` as the email, and `Admin2016` as the password.
   void seedAdmin();
+  // Seed the default venues so the admin page has something to manage even
+  // before anyone edits them.
+  for (const v of DEFAULT_VENUES) store.venues.set(v.id, { ...v });
 }
 
 async function seedAdmin(): Promise<void> {
@@ -294,6 +333,94 @@ export const db = {
     store.activity.push(entry);
     if (store.activity.length > 2000) store.activity.splice(0, store.activity.length - 2000);
     return entry;
+  },
+
+  // ── Admin-side mutations ──
+  deleteChatMessage(messageId: string): boolean {
+    const before = store.chat.length;
+    store.chat = store.chat.filter((m) => m.id !== messageId);
+    return store.chat.length !== before;
+  },
+
+  deleteDM(messageId: string): boolean {
+    const before = store.dms.length;
+    store.dms = store.dms.filter((m) => m.id !== messageId);
+    return store.dms.length !== before;
+  },
+
+  deleteReport(reportId: string): boolean {
+    return store.reports.delete(reportId);
+  },
+
+  listAllDMs(): DirectMessage[] {
+    return [...store.dms].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+
+  // ── Venues ──
+  listVenues(): Venue[] {
+    return Array.from(store.venues.values());
+  },
+
+  getVenue(venueId: string): Venue | undefined {
+    return store.venues.get(venueId);
+  },
+
+  addVenue(input: Omit<Venue, "id"> & { id?: string }): Venue {
+    const venueId =
+      input.id ||
+      input.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "") ||
+      id("V");
+    const venue: Venue = {
+      id: venueId,
+      name: input.name,
+      image: input.image,
+      description: input.description,
+      locationUrl: input.locationUrl,
+      minAge: input.minAge,
+      maxAge: input.maxAge,
+      activeCount: input.activeCount,
+      totalBookings: input.totalBookings,
+      hasLocationsDropdown: input.hasLocationsDropdown,
+    };
+    store.venues.set(venue.id, venue);
+    return venue;
+  },
+
+  updateVenue(venueId: string, patch: Partial<Omit<Venue, "id">>): Venue | undefined {
+    const venue = store.venues.get(venueId);
+    if (!venue) return undefined;
+    for (const [k, v] of Object.entries(patch)) {
+      if (v !== undefined) (venue as unknown as Record<string, unknown>)[k] = v;
+    }
+    return venue;
+  },
+
+  deleteVenue(venueId: string): boolean {
+    return store.venues.delete(venueId);
+  },
+
+  // ── Donations ──
+  listDonations(): Donation[] {
+    return Array.from(store.donations.values()).sort((a, b) =>
+      b.createdAt.localeCompare(a.createdAt),
+    );
+  },
+
+  addDonation(input: Omit<Donation, "id" | "createdAt">): Donation {
+    const donation: Donation = {
+      ...input,
+      id: id("DN"),
+      createdAt: new Date().toISOString(),
+    };
+    store.donations.set(donation.id, donation);
+    return donation;
+  },
+
+  deleteDonation(donationId: string): boolean {
+    return store.donations.delete(donationId);
   },
 };
 

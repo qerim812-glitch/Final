@@ -301,6 +301,10 @@ function hasRegisteredUser() {
   return Boolean(getSessionId() && currentUser.email);
 }
 
+function isAdminUser() {
+  return currentUser.email === 'admin@socialcircle.al';
+}
+
 function setupNavigationState() {
   const pathname = window.location.pathname.split('/').pop() || 'home.html';
   const pageName = pathname === 'home.html' || pathname === '' || pathname === '/' ? 'home' : pathname.replace('.html', '');
@@ -308,6 +312,11 @@ function setupNavigationState() {
     const target = link.dataset.page || link.dataset.side;
     if (!target) return;
     link.classList.toggle('active', target === pageName);
+  });
+
+  // Admin nav link is hidden by default; show it to the admin on every page.
+  document.querySelectorAll('.pill-nav-admin').forEach((link) => {
+    link.classList.toggle('hidden', !isAdminUser());
   });
 }
 
@@ -660,12 +669,18 @@ function copyBankDetails() {
     .catch(() => showToast('Unable to copy', 'error'));
 }
 
-function handleDonationSubmit(event) {
+async function handleDonationSubmit(event) {
   event.preventDefault();
   const method = document.getElementById('payment-method').value;
   const amountInput = document.getElementById('donation-amount');
   const amount = Number(amountInput ? amountInput.value || 0 : 0);
   const successBox = document.getElementById('donation-success');
+
+  // Persist the donation so the admin dashboard can show it. Fire-and-forget
+  // so a storage hiccup never blocks the UX — the user still sees success.
+  if (getSessionId() && method && amount > 0) {
+    api('/api/donations', { method: 'POST', body: { amount, method } }).catch(() => {});
+  }
 
   if (method === 'stripe') {
     const url = new URL('https://buy.stripe.com/test_00g9Eo5mU4OQ4KQ7');
@@ -902,10 +917,14 @@ async function handleAdminLogin(event) {
   try {
     const { user } = await api('/api/admin', { method: 'POST', body: { email, password } });
     setSessionId(user.userId);
+    currentUser.email = user.email;
     if (error) error.style.display = 'none';
     document.getElementById('admin-login-view').style.display = 'none';
     document.getElementById('admin-dashboard-view').style.display = 'block';
+    setupAdminTabs();
     await renderAdminTables();
+    // Reveal the Admin pill-nav link now that we know we're admin.
+    document.querySelectorAll('.pill-nav-admin').forEach((link) => link.classList.remove('hidden'));
   } catch {
     if (error) error.style.display = 'block';
   }
@@ -947,13 +966,237 @@ async function renderAdminTables() {
             <td>${escapeHTML(r.reason)}</td>
             <td>${escapeHTML(r.description)}</td>
             <td>${escapeHTML(new Date(r.createdAt).toLocaleString())}</td>
+            <td><button type="button" class="link-danger" data-admin-delete-report="${escapeHTML(r.id)}">Delete</button></td>
           </tr>
         `).join('')
-        : '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);">No reports yet.</td></tr>';
+        : '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);">No reports yet.</td></tr>';
+      reportTbody.querySelectorAll('[data-admin-delete-report]').forEach((btn) =>
+        btn.addEventListener('click', () => handleDeleteReport(btn.dataset.adminDeleteReport)),
+      );
     }
   } catch (err) {
     showToast(err.message || 'Admin fetch failed', 'error');
   }
+}
+
+async function handleDeleteReport(reportId) {
+  if (!confirm('Delete this report?')) return;
+  try {
+    await api(`/api/reports?id=${encodeURIComponent(reportId)}`, { method: 'DELETE' });
+    showToast('Report deleted', 'success');
+    renderAdminTables();
+  } catch (err) {
+    showToast(err.message || 'Delete failed', 'error');
+  }
+}
+
+/* ── Admin: Messages ── */
+async function renderAdminMessages() {
+  const chatBody = document.getElementById('admin-chat-body');
+  const dmBody = document.getElementById('admin-dm-body');
+  if (!chatBody && !dmBody) return;
+  try {
+    const { chat, dms } = await api('/api/admin/messages');
+    if (chatBody) {
+      chatBody.innerHTML = chat.length
+        ? chat.map((m) => `
+          <tr>
+            <td>${escapeHTML(new Date(m.createdAt).toLocaleString())}</td>
+            <td>${escapeHTML(m.author || m.userId)}</td>
+            <td>${escapeHTML(m.text)}</td>
+            <td><button type="button" class="link-danger" data-del-chat="${escapeHTML(m.id)}">Delete</button></td>
+          </tr>
+        `).join('')
+        : '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);">No chat messages yet.</td></tr>';
+      chatBody.querySelectorAll('[data-del-chat]').forEach((btn) =>
+        btn.addEventListener('click', () => handleDeleteMessage('chat', btn.dataset.delChat)),
+      );
+    }
+    if (dmBody) {
+      dmBody.innerHTML = dms.length
+        ? dms.map((m) => `
+          <tr>
+            <td>${escapeHTML(new Date(m.createdAt).toLocaleString())}</td>
+            <td>${escapeHTML(m.fromUserId)}</td>
+            <td>${escapeHTML(m.toUserId)}</td>
+            <td>${escapeHTML(m.text)}</td>
+            <td><button type="button" class="link-danger" data-del-dm="${escapeHTML(m.id)}">Delete</button></td>
+          </tr>
+        `).join('')
+        : '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">No DMs yet.</td></tr>';
+      dmBody.querySelectorAll('[data-del-dm]').forEach((btn) =>
+        btn.addEventListener('click', () => handleDeleteMessage('dm', btn.dataset.delDm)),
+      );
+    }
+  } catch (err) {
+    showToast(err.message || 'Messages fetch failed', 'error');
+  }
+}
+
+async function handleDeleteMessage(kind, messageId) {
+  if (!confirm(`Delete this ${kind === 'chat' ? 'chat message' : 'DM'}?`)) return;
+  try {
+    await api('/api/admin/messages', { method: 'POST', body: { kind, id: messageId } });
+    showToast('Deleted', 'success');
+    renderAdminMessages();
+  } catch (err) {
+    showToast(err.message || 'Delete failed', 'error');
+  }
+}
+
+/* ── Admin: Venues ── */
+async function renderAdminVenues() {
+  const body = document.getElementById('admin-venues-body');
+  if (!body) return;
+  try {
+    const { venues } = await api('/api/admin/venues');
+    body.innerHTML = venues.length
+      ? venues.map((v) => `
+        <tr>
+          <td><code>${escapeHTML(v.id)}</code></td>
+          <td>${escapeHTML(v.name)}</td>
+          <td>${v.minAge}–${v.maxAge}</td>
+          <td>${v.activeCount}</td>
+          <td>${v.totalBookings}</td>
+          <td>
+            <button type="button" class="link" data-edit-venue="${escapeHTML(v.id)}">Edit</button>
+            <button type="button" class="link-danger" data-del-venue="${escapeHTML(v.id)}">Delete</button>
+          </td>
+        </tr>
+      `).join('')
+      : '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);">No venues yet.</td></tr>';
+    body.querySelectorAll('[data-edit-venue]').forEach((btn) =>
+      btn.addEventListener('click', () => editVenueFromRow(btn.dataset.editVenue)),
+    );
+    body.querySelectorAll('[data-del-venue]').forEach((btn) =>
+      btn.addEventListener('click', () => deleteVenueFromAdmin(btn.dataset.delVenue)),
+    );
+  } catch (err) {
+    showToast(err.message || 'Venues fetch failed', 'error');
+  }
+}
+
+async function editVenueFromRow(venueId) {
+  try {
+    const { venues } = await api('/api/admin/venues');
+    const v = venues.find((x) => x.id === venueId);
+    if (!v) return;
+    document.getElementById('venue-id').value = v.id;
+    document.getElementById('venue-name').value = v.name || '';
+    document.getElementById('venue-image').value = v.image || '';
+    document.getElementById('venue-description').value = v.description || '';
+    document.getElementById('venue-location').value = v.locationUrl || '';
+    document.getElementById('venue-min').value = v.minAge ?? 18;
+    document.getElementById('venue-max').value = v.maxAge ?? 99;
+    document.getElementById('venue-active').value = v.activeCount ?? 0;
+    document.getElementById('venue-total').value = v.totalBookings ?? 0;
+    document.getElementById('venue-dropdown').checked = Boolean(v.hasLocationsDropdown);
+    document.getElementById('venue-name').focus();
+  } catch (err) {
+    showToast(err.message || 'Could not load venue', 'error');
+  }
+}
+
+function resetVenueForm() {
+  const form = document.getElementById('admin-venue-form');
+  if (!form) return;
+  form.reset();
+  document.getElementById('venue-id').value = '';
+}
+
+async function handleAdminVenueSubmit(event) {
+  event.preventDefault();
+  const payload = {
+    op: document.getElementById('venue-id').value ? 'update' : 'create',
+    id: document.getElementById('venue-id').value || undefined,
+    name: document.getElementById('venue-name').value.trim(),
+    image: document.getElementById('venue-image').value.trim(),
+    description: document.getElementById('venue-description').value.trim(),
+    locationUrl: document.getElementById('venue-location').value.trim(),
+    minAge: Number(document.getElementById('venue-min').value),
+    maxAge: Number(document.getElementById('venue-max').value),
+    activeCount: Number(document.getElementById('venue-active').value),
+    totalBookings: Number(document.getElementById('venue-total').value),
+    hasLocationsDropdown: document.getElementById('venue-dropdown').checked,
+  };
+  try {
+    await api('/api/admin/venues', { method: 'POST', body: payload });
+    showToast(payload.op === 'update' ? 'Venue updated' : 'Venue created', 'success');
+    resetVenueForm();
+    renderAdminVenues();
+  } catch (err) {
+    showToast(err.message || 'Save failed', 'error');
+  }
+}
+
+async function deleteVenueFromAdmin(venueId) {
+  if (!confirm(`Delete venue "${venueId}"?`)) return;
+  try {
+    await api('/api/admin/venues', { method: 'POST', body: { op: 'delete', id: venueId } });
+    showToast('Venue deleted', 'success');
+    renderAdminVenues();
+  } catch (err) {
+    showToast(err.message || 'Delete failed', 'error');
+  }
+}
+
+/* ── Admin: Donations ── */
+async function renderAdminDonations() {
+  const body = document.getElementById('admin-donations-body');
+  if (!body) return;
+  try {
+    const { donations } = await api('/api/donations');
+    body.innerHTML = donations.length
+      ? donations.map((d) => `
+        <tr>
+          <td>${escapeHTML(new Date(d.createdAt).toLocaleString())}</td>
+          <td>${escapeHTML(d.email)}</td>
+          <td>${escapeHTML(d.method)}</td>
+          <td>${Number(d.amount).toFixed(2)}</td>
+          <td><button type="button" class="link-danger" data-del-donation="${escapeHTML(d.id)}">Delete</button></td>
+        </tr>
+      `).join('')
+      : '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">No donations yet.</td></tr>';
+    body.querySelectorAll('[data-del-donation]').forEach((btn) =>
+      btn.addEventListener('click', () => deleteDonationFromAdmin(btn.dataset.delDonation)),
+    );
+  } catch (err) {
+    showToast(err.message || 'Donations fetch failed', 'error');
+  }
+}
+
+async function deleteDonationFromAdmin(donationId) {
+  if (!confirm('Delete this donation record?')) return;
+  try {
+    await api(`/api/donations?id=${encodeURIComponent(donationId)}`, { method: 'DELETE' });
+    showToast('Donation deleted', 'success');
+    renderAdminDonations();
+  } catch (err) {
+    showToast(err.message || 'Delete failed', 'error');
+  }
+}
+
+function setupAdminTabs() {
+  const tabs = document.querySelectorAll('.admin-tab');
+  if (!tabs.length) return;
+  const panels = document.querySelectorAll('.admin-panel');
+  const loaders = {
+    bookings: renderAdminTables,
+    reports: renderAdminTables,
+    messages: renderAdminMessages,
+    venues: renderAdminVenues,
+    donations: renderAdminDonations,
+  };
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      tabs.forEach((t) => t.classList.toggle('active', t === tab));
+      panels.forEach((p) => p.classList.toggle('hidden', p.dataset.panel !== tab.dataset.adminTab));
+      const loader = loaders[tab.dataset.adminTab];
+      if (loader) loader();
+    });
+  });
+  document.getElementById('admin-venue-form')?.addEventListener('submit', handleAdminVenueSubmit);
+  document.getElementById('venue-reset')?.addEventListener('click', resetVenueForm);
 }
 
 function renderTonightPane() {
