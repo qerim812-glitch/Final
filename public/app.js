@@ -905,15 +905,20 @@ async function handleAdminLogin(event) {
   const email = document.getElementById('admin-email').value.trim();
   const password = document.getElementById('admin-password').value;
   const authCode = document.getElementById('admin-2fa').value.trim();
-  const dogName = document.getElementById('admin-dog').value.trim();
   const error = document.getElementById('admin-auth-error');
 
-  if (!email || !password || !authCode || !dogName) {
-    if (error) error.style.display = 'block';
+  if (!email || !password || !authCode) {
+    if (error) {
+      error.textContent = 'Email, password and verification code are required.';
+      error.style.display = 'block';
+    }
     return;
   }
-  if (!(authCode === 'APPROVED' || /^\d{6}$/.test(authCode)) || dogName.length < 2) {
-    if (error) error.style.display = 'block';
+  if (!(authCode === 'APPROVED' || /^\d{6}$/.test(authCode))) {
+    if (error) {
+      error.textContent = 'Verification code must be 6 digits or the word APPROVED.';
+      error.style.display = 'block';
+    }
     return;
   }
 
@@ -928,8 +933,11 @@ async function handleAdminLogin(event) {
     await renderAdminTables();
     // Reveal the Admin pill-nav link now that we know we're admin.
     document.querySelectorAll('.pill-nav-admin').forEach((link) => link.classList.remove('hidden'));
-  } catch {
-    if (error) error.style.display = 'block';
+  } catch (err) {
+    if (error) {
+      error.textContent = err.message || 'Invalid admin credentials.';
+      error.style.display = 'block';
+    }
   }
 }
 

@@ -146,31 +146,40 @@ export function isAdminEmail(email: string | undefined | null): boolean {
   return !!email && ADMIN_EMAILS.has(email.toLowerCase());
 }
 
-type AdminSeed = { userId: string; email: string; password: string };
+// Pre-computed SHA-256('sc:' || password) hashes so the admins are seeded
+// synchronously on module load. Without this the auth check could race the
+// async hash and reject a correct password on the very first request.
+type AdminSeed = { userId: string; email: string; passwordHash: string };
 const ADMIN_SEEDS: AdminSeed[] = [
-  { userId: "USR-ADMIN", email: "admin@socialcircle.al", password: "Admin2016" },
-  { userId: "USR-ADMIN-2", email: "mexhidara1@gmail.com", password: "Karomio123!" },
+  {
+    userId: "USR-ADMIN",
+    email: "admin@socialcircle.al",
+    // SHA-256('sc:Admin2016')
+    passwordHash: "f34fa0e07848b4a33ef8e1649cc12ee8a28b007820fe7fcfe35ae4ac36441d5b",
+  },
+  {
+    userId: "USR-ADMIN-2",
+    email: "mexhidara1@gmail.com",
+    // SHA-256('sc:Karomio123!')
+    passwordHash: "1a3753f3649f0bacd4344ef210fd1c705d1c990ef57deb5e18c732db5768cc7c",
+  },
 ];
 
 const store: Store = globalThis.__socialCircleStore ?? createStore();
 if (!globalThis.__socialCircleStore) {
   globalThis.__socialCircleStore = store;
-  // Seed the built-in admin accounts. The admin page accepts `admin`
-  // (shorthand) or any admin email, plus the matching password.
-  void seedAdmins();
-  // Seed the default venues so the admin page has something to manage even
-  // before anyone edits them.
+  seedAdmins();
   for (const v of DEFAULT_VENUES) store.venues.set(v.id, { ...v });
 }
 
-async function seedAdmins(): Promise<void> {
+function seedAdmins(): void {
   for (const seed of ADMIN_SEEDS) {
     const existing = Array.from(store.users.values()).find((u) => u.email === seed.email);
     if (existing) continue;
     const admin: User = {
       userId: seed.userId,
       email: seed.email,
-      passwordHash: await hashPassword(seed.password),
+      passwordHash: seed.passwordHash,
       ageRange: "25-30",
       createdAt: new Date().toISOString(),
     };
