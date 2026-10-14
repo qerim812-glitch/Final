@@ -99,3 +99,16 @@ CREATE TABLE IF NOT EXISTS venues (
 CREATE TABLE IF NOT EXISTS bar_locations (
   slug TEXT PRIMARY KEY
 );
+
+-- Donations logged from the donations page. One row per attempt; the row is
+-- also what the admin Donations tab reads back.
+CREATE TABLE IF NOT EXISTS donations (
+  id          TEXT PRIMARY KEY,
+  user_id     TEXT NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,
+  email       TEXT NOT NULL,
+  amount      REAL NOT NULL CHECK (amount > 0),
+  method      TEXT NOT NULL,
+  created_at  TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_donations_created ON donations (created_at);
+CREATE INDEX IF NOT EXISTS idx_donations_user ON donations (user_id);
