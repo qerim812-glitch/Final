@@ -12,11 +12,11 @@ Postgres) without reshaping the application code — the module boundary is
 
 - `schema.sql` — `CREATE TABLE` + `CREATE INDEX` for every collection:
   `users`, `bookings`, `favorites`, `reviews`, `chat_messages`,
-  `direct_messages`, `reports`, `activity`, and the reference tables
-  `venues` / `bar_locations`.
-- `seed.sql` — initial rows: the built-in admin account, two sample members,
-  the seven venues, every bar location, and a couple of sample bookings and
-  reports so the admin dashboard renders real data on first open.
+  `direct_messages`, `reports`, `activity`, `donations`, and the reference
+  tables `venues` / `bar_locations`.
+- `seed.sql` — initial rows: the two built-in admin accounts, the seven
+  venues, and every bar-location slug. No sample members, bookings or
+  reports are seeded — those appear as users use the app.
 
 ## Built-in credentials
 

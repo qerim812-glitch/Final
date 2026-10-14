@@ -171,23 +171,6 @@ function toggleDarkMode() {
   showToast(isDark ? 'Dark mode on' : 'Light mode on');
 }
 
-/* Mobile menu */
-function setupMobileMenu() {
-  const hamburger = document.getElementById('hamburger-menu');
-  const navLinks = document.querySelector('.nav-links');
-  if (!hamburger || !navLinks) return;
-  hamburger.addEventListener('click', () => {
-    hamburger.classList.toggle('active');
-    navLinks.classList.toggle('active');
-  });
-  navLinks.querySelectorAll('a').forEach((link) =>
-    link.addEventListener('click', () => {
-      hamburger.classList.remove('active');
-      navLinks.classList.remove('active');
-    }),
-  );
-}
-
 /* Favorites — server-backed */
 async function toggleFavorite(venueId) {
   if (!getSessionId()) {
@@ -1260,7 +1243,6 @@ function renderTonightPane() {
 
 document.addEventListener('DOMContentLoaded', async () => {
   initDarkMode();
-  setupMobileMenu();
   await loadUserState();
 
   // Auth / page gate — may redirect and halt further init.
@@ -1279,9 +1261,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (getSessionId()) {
     api('/api/activity', { method: 'POST', body: { action: 'page_visit' } }).catch(() => {});
   }
-
-  const welcomeModal = document.getElementById('welcome-modal');
-  if (welcomeModal) welcomeModal.style.display = hasRegisteredUser() ? 'none' : 'flex';
 
   const today = new Date().toISOString().split('T')[0];
   const dateInput = document.getElementById('booking-date');

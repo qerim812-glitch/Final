@@ -58,4 +58,4 @@ INSERT INTO bar_locations (slug) VALUES
   ('rruga jan kukuzeli'), ('rruga sami frasheri'), ('rruga medar shtylla'),
   ('zogu i zi'), ('rruga muhamet gjollesha'), ('rruga e kavajes'), ('toptani'),
   ('rruga e elbasanit'), ('rruga e durresit'), ('rruga e barikadave'),
-  ('don bosco'), ('ali demi'), ('rruga hoxha tasim'), ('kombinat');
+  ('don bosco'), ('ali demi'), ('rruga hoxha tasim'), ('kombinat')

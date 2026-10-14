@@ -2342,3 +2342,466 @@ html[data-theme="dark"] {
     grid-template-columns: 1fr;
   }
 }
+
+/* ─────────────────────────────────────────────────────────
+   Application polish — make the dark app feel finished.
+   Tokens, cards, buttons, forms, chat, modals, spreadsheets.
+   This layer only *adds* to earlier rules; nothing above is
+   redefined destructively.
+   ───────────────────────────────────────────────────────── */
+
+.app-body.dark-mode {
+  /* A deeper, more neutral base so cards + accents pop. */
+  --bg: #0f172a;
+  --bg-strong: #0a0f1c;
+  --card-bg: #141b2d;
+  --card-elevated: #1a2238;
+  --text: #e8ecf5;
+  --text-muted: #96a0b5;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --primary: #a78bfa;
+  --primary-strong: #8b5cf6;
+  --accent-soft: rgba(167, 139, 250, 0.14);
+  --success: #34d399;
+  --danger: #f87171;
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.35);
+  background: radial-gradient(1200px 600px at 10% -10%, rgba(167, 139, 250, 0.08), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(236, 72, 153, 0.06), transparent 60%),
+    var(--app-bg);
+  background-attachment: fixed;
+}
+
+/* ── Typography ─────────────────────────────── */
+.app-body h1,
+.app-body h2,
+.app-body h3,
+.app-body h4 {
+  letter-spacing: -0.015em;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.app-body h2 {
+  font-size: clamp(1.4rem, 2.2vw, 1.8rem);
+  margin-bottom: 0.5rem;
+}
+
+.app-body h3 {
+  font-size: 1.05rem;
+}
+
+.app-body p {
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+/* ── Cards (venue grid, admin login box, detail header) ── */
+.app-body .card,
+.app-body .detail-header,
+.app-body .booking-form,
+.app-body .account-card,
+.app-body .chat-container,
+.app-body .admin-login-box {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  border-radius: 18px;
+}
+
+.app-body .card {
+  padding: 0;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.app-body .card:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-strong);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+}
+
+.app-body .card img {
+  border-bottom: 1px solid var(--border);
+}
+
+.app-body .card-body {
+  padding: 1.25rem 1.25rem 1.4rem;
+}
+
+.app-body .card-title {
+  color: var(--text);
+}
+
+.app-body .card-text {
+  color: var(--text-muted);
+}
+
+.app-body .live-counter {
+  background: var(--accent-soft);
+  color: #ddd6fe;
+  border: 1px solid rgba(167, 139, 250, 0.2);
+}
+
+.app-body .pulse {
+  background: var(--primary);
+  box-shadow: 0 0 0 0 rgba(167, 139, 250, 0.6);
+}
+
+.app-body .badge-age {
+  color: var(--text-muted);
+}
+
+.app-body .map-link {
+  color: var(--primary);
+}
+
+/* ── Buttons ─────────────────────────────────── */
+.app-body .btn-primary {
+  background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+  color: #0a0f1c;
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(139, 92, 246, 0.3);
+  border-radius: 12px;
+  padding: 0.75rem 1.4rem;
+  font-weight: 700;
+}
+
+.app-body .btn-primary:hover {
+  box-shadow: 0 14px 30px rgba(139, 92, 246, 0.42);
+  filter: brightness(1.06);
+}
+
+/* ── Forms ──────────────────────────────────── */
+.app-body .form-group label {
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.app-body .form-group input,
+.app-body .form-group select,
+.app-body .form-group textarea {
+  background: var(--bg-strong);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  padding: 0.72rem 0.85rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.app-body .form-group input::placeholder,
+.app-body .form-group textarea::placeholder {
+  color: #566178;
+}
+
+.app-body .form-group input:focus,
+.app-body .form-group select:focus,
+.app-body .form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.18);
+  background: #0a0f1c;
+}
+
+.app-body .form-hint {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+/* readonly fields in forms (e.g. detail.html email prefill) */
+.app-body .form-group input[readonly] {
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+/* ── Chat bubbles ───────────────────────────── */
+.app-body .chat-header {
+  background: var(--bg-strong);
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  border-radius: 18px 18px 0 0;
+}
+
+.app-body .chat-messages {
+  background: var(--bg-strong);
+}
+
+.app-body .chat-msg {
+  padding: 0.7rem 0.95rem;
+  border-radius: 14px;
+  line-height: 1.4;
+}
+
+.app-body .chat-msg.other {
+  background: var(--card-elevated);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.app-body .chat-msg.self {
+  background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+  color: #ffffff;
+  border: none;
+}
+
+.app-body .chat-sender {
+  opacity: 0.85;
+}
+
+.app-body .chat-form {
+  background: var(--card-bg);
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 18px 18px;
+}
+
+.app-body .chat-form input {
+  background: var(--bg-strong);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.app-body .chat-banner {
+  background: rgba(251, 191, 36, 0.1);
+  color: #fcd34d;
+  border-bottom-color: rgba(251, 191, 36, 0.25);
+}
+
+/* ── Alerts / toasts ─────────────────────────── */
+.app-body .alert-error {
+  background: rgba(248, 113, 113, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: #fca5a5;
+}
+
+.app-body .alert-success {
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  color: #6ee7b7;
+}
+
+.app-body .toast {
+  background: var(--card-elevated);
+  border: 1px solid var(--border);
+  color: var(--text);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ── Spreadsheet / tables ─────────────────────── */
+.app-body .spreadsheet-container {
+  background: var(--card-bg);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.app-body .spreadsheet {
+  background: transparent;
+  border: none;
+  color: var(--text);
+}
+
+.app-body .spreadsheet th {
+  background: var(--bg-strong);
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  text-align: left;
+  font-weight: 600;
+  padding: 0.85rem 0.75rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.app-body .spreadsheet td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.9rem 0.75rem;
+  font-size: 0.92rem;
+  color: var(--text);
+}
+
+.app-body .spreadsheet tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.app-body .spreadsheet tr:hover {
+  background: rgba(167, 139, 250, 0.08);
+}
+
+/* ── Account page ─────────────────────────────── */
+.app-body .account-card {
+  padding: 1.75rem;
+}
+
+.app-body .account-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.app-body .account-item strong {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.app-body .account-item span {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.app-body .stat-card {
+  background: var(--card-elevated);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.app-body .stat-value {
+  color: var(--primary);
+}
+
+/* ── Modal / booking confirmation ─────────────── */
+.app-body .modal-overlay {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+}
+
+.app-body .modal-box,
+#booking-confirmation-modal > div {
+  background: var(--card-bg) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  border-radius: 20px;
+}
+
+/* ── Badge for age range ──────────────────────── */
+.app-body .badge-age strong {
+  color: var(--primary);
+}
+
+/* ── Hero (home page) ─────────────────────────── */
+.app-body .hero {
+  background:
+    linear-gradient(135deg, rgba(139, 92, 246, 0.75), rgba(236, 72, 153, 0.55), rgba(251, 191, 36, 0.4)),
+    url("https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600&q=80")
+      center/cover;
+  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.4);
+  border-radius: 24px;
+}
+
+/* ── Search bar ──────────────────────────────── */
+.app-body .search-bar {
+  background: var(--bg-strong);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+}
+
+.app-body .search-bar:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.18);
+}
+
+/* ── Favorite button on cards ───────────────── */
+.app-body .favorite-btn {
+  background: rgba(10, 15, 28, 0.75);
+  border: 1px solid var(--border);
+  color: #96a0b5;
+  backdrop-filter: blur(6px);
+}
+
+.app-body .favorite-btn:hover,
+.app-body .favorite-btn.active {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.15);
+  border-color: rgba(251, 191, 36, 0.4);
+}
+
+/* ── Footer ──────────────────────────────────── */
+.app-body footer {
+  background: transparent;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.app-body footer a {
+  color: var(--primary);
+}
+
+/* ── Admin tabs — dark variant ─────────────── */
+.app-body .admin-tab {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.app-body .admin-tab:hover {
+  background: var(--accent-soft);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.app-body .admin-form {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+}
+
+/* ── Link buttons (admin tables) ─────────────── */
+.app-body .link {
+  color: var(--primary);
+}
+
+.app-body .link-danger {
+  color: var(--danger);
+}
+
+/* ── Smooth transitions app-wide ────────────── */
+.app-body a,
+.app-body button {
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease,
+    transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+/* ── Scrollbars ─────────────────────────────── */
+.app-body ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.app-body ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.app-body ::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 10px;
+}
+.app-body ::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* ── Mobile final pass ───────────────────────── */
+@media (max-width: 640px) {
+  .app-body .account-card {
+    padding: 1.25rem;
+  }
+  .app-body .account-item {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .app-body .spreadsheet th,
+  .app-body .spreadsheet td {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.82rem;
+  }
+  .app-body h2 {
+    font-size: 1.3rem;
+  }
+}
